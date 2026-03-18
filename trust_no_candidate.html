@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Trust No Candidate</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@300;400;600&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#C9A84C;--gl:#F0C050;--red:#C0392B;--bg:#0A0A0A;--bg2:#111;--sf:#1E1E1E;--bd:#2A2A2A;--tx:#E8E0D0;--mu:#888880;--dm:#444440;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--tx);font-family:'Oswald',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:.4;}
+.screen{display:none;min-height:100vh;flex-direction:column;}
+.screen.active{display:flex;}
+
+/* SPLASH */
+#s-splash{background:radial-gradient(ellipse at 50% 30%,#1a0a00,#0A0A0A 70%);align-items:center;justify-content:center;text-align:center;padding:40px 24px;position:relative;overflow:hidden;}
+#s-splash::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.sp-eye{font-family:'Special Elite',cursive;font-size:11px;letter-spacing:4px;color:var(--mu);margin-bottom:20px;text-transform:uppercase;}
+.sp-trust{font-family:'Oswald',sans-serif;font-weight:300;font-size:28px;letter-spacing:8px;color:var(--tx);text-transform:uppercase;line-height:1;}
+.sp-main{font-family:'Bebas Neue',sans-serif;font-size:clamp(56px,18vw,84px);line-height:.9;background:linear-gradient(180deg,var(--gl),var(--gold) 60%,#8B6914);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:2px;margin-bottom:4px;}
+.sp-div{width:120px;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent);margin:20px auto;}
+.sp-sub{font-family:'Special Elite',cursive;font-size:12px;color:var(--mu);letter-spacing:2px;margin-bottom:48px;}
+.sp-badges{display:flex;gap:16px;justify-content:center;margin-top:40px;}
+.badge{font-family:'Special Elite',cursive;font-size:10px;color:var(--dm);letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border:1px solid var(--bd);}
+
+/* BUTTONS */
+.btn-g{background:linear-gradient(135deg,var(--gold),#8B6914);color:#0A0A0A;border:none;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;padding:16px 48px;cursor:pointer;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);transition:all .2s;width:100%;max-width:280px;}
+.btn-g:active{transform:scale(.97);opacity:.9;}
+.btn-gh{background:transparent;color:var(--mu);border:1px solid var(--bd);font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:2px;padding:12px 32px;cursor:pointer;text-transform:uppercase;width:100%;max-width:280px;margin-top:12px;}
+.btn-r{background:var(--red);color:var(--tx);border:none;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;padding:16px;width:100%;cursor:pointer;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);display:none;margin-top:4px;transition:all .2s;}
+.btn-r:active{transform:scale(.97);}
+
+/* SHARED LAYOUT */
+.sh{padding:20px 20px 0;display:flex;align-items:center;gap:12px;}
+.bk{background:none;border:none;color:var(--mu);cursor:pointer;padding:4px 8px 4px 0;font-family:'Oswald',sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:1px;}
+.sh-t{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--gold);flex:1;}
+.sh-s{font-family:'Special Elite',cursive;font-size:11px;color:var(--dm);letter-spacing:1px;}
+.sc{flex:1;padding:20px;overflow-y:auto;}
+.sb{padding:16px 20px 32px;border-top:1px solid var(--bd);background:var(--bg2);}
+.sl{font-family:'Special Elite',cursive;font-size:10px;letter-spacing:3px;color:var(--mu);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.sl::after{content:'';flex:1;height:1px;background:var(--bd);}
+.warn{font-family:'Special Elite',cursive;font-size:11px;color:#cc4444;letter-spacing:1px;text-align:center;margin-top:8px;}
+
+/* PLAYERS */
+.plist{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.pitem{background:var(--sf);border:1px solid var(--bd);display:flex;align-items:center;gap:12px;padding:12px 14px;position:relative;overflow:hidden;}
+.pitem::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold);}
+.pnum{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold);min-width:24px;}
+.pin{flex:1;background:none;border:none;color:var(--tx);font-family:'Oswald',sans-serif;font-size:16px;font-weight:400;letter-spacing:1px;outline:none;}
+.pin::placeholder{color:var(--dm);}
+.pdel{background:none;border:none;color:var(--dm);font-size:18px;cursor:pointer;padding:4px;}
+.add-p{background:none;border:1px dashed var(--bd);color:var(--mu);font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;width:100%;}
+
+/* TOGGLES */
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;}
+.ti{background:var(--sf);border:1px solid var(--bd);padding:12px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;}
+.ti.on{border-color:var(--gold);background:#1a1500;}
+.ti.on::after{content:'✓';position:absolute;top:8px;right:8px;font-size:12px;color:var(--gold);}
+.tn{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--tx);margin-bottom:3px;}
+.td{font-family:'Special Elite',cursive;font-size:10px;color:var(--mu);line-height:1.4;}
+
+/* CARD EDITOR */
+#s-editor{flex-direction:column;}
+.etabs{display:flex;border-bottom:1px solid var(--bd);background:var(--bg2);}
+.etab{flex:1;padding:12px 8px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--dm);text-align:center;cursor:pointer;border:none;background:none;}
+.etab.on{color:var(--gold);border-bottom:2px solid var(--gold);}
+.ep{display:none;padding:16px 20px;flex:1;overflow-y:auto;}
+.ep.on{display:block;}
+.cei{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--sf);border:1px solid var(--bd);margin-bottom:6px;cursor:pointer;}
+.cei.off{opacity:.32;border-style:dashed;}
+.cetype{font-family:'Special Elite',cursive;font-size:9px;letter-spacing:2px;padding:2px 6px;border:1px solid;flex-shrink:0;margin-top:2px;}
+.cetext{font-family:'Oswald',sans-serif;font-size:13px;font-weight:300;color:var(--tx);flex:1;line-height:1.4;}
+.cetog{font-size:16px;flex-shrink:0;margin-top:1px;}
+.cei.off .cetog::before{content:'○';color:var(--dm);}
+.cei:not(.off) .cetog::before{content:'●';color:var(--gold);}
+.ecnt{font-family:'Special Elite',cursive;font-size:10px;color:var(--mu);text-align:right;margin-bottom:10px;letter-spacing:1px;}
+
+/* SECRET CARD SCREEN */
+#s-card{background:var(--bg);align-items:center;justify-content:center;padding:24px;text-align:center;flex-direction:column;}
+.cpn{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:3px;color:var(--mu);margin-bottom:4px;}
+.cinstr{font-family:'Special Elite',cursive;font-size:12px;color:var(--dm);letter-spacing:2px;margin-bottom:20px;}
+
+/* FLIP CARD — role card */
+.role-flip-wrap{width:100%;max-width:320px;perspective:900px;margin:0 auto 20px;cursor:pointer;}
+.role-flip-inner{position:relative;width:100%;aspect-ratio:2/3;transition:transform .55s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d;}
+.role-flip-wrap.flipped .role-flip-inner{transform:rotateY(180deg);}
+.role-front,.role-back{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;}
+.role-front{background:var(--sf);border:2px solid var(--bd);}
+.role-back{transform:rotateY(180deg);background:var(--sf);border:2px solid var(--bd);overflow:hidden;}
+.role-back::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(255,255,255,.015) 10px,rgba(255,255,255,.015) 20px);pointer-events:none;}
+.ctap{font-family:'Special Elite',cursive;font-size:11px;color:var(--dm);letter-spacing:3px;text-transform:uppercase;margin-top:14px;}
+.clock{font-size:40px;margin-bottom:12px;opacity:.3;}
+.clogo{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;color:var(--gold);opacity:.6;}
+.ctb{font-family:'Special Elite',cursive;font-size:10px;letter-spacing:3px;text-transform:uppercase;padding:4px 12px;margin-bottom:14px;border:1px solid currentColor;}
+.cmt{font-family:'Bebas Neue',sans-serif;letter-spacing:2px;line-height:1;margin-bottom:10px;text-align:center;}
+.cdl{width:60px;height:1px;margin:0 auto 10px;}
+.cbt{font-family:'Special Elite',cursive;font-size:11px;color:var(--mu);line-height:1.6;text-align:center;}
+.cub{position:absolute;bottom:12px;right:12px;font-family:'Special Elite',cursive;font-size:9px;letter-spacing:1px;color:var(--dm);border:1px solid var(--bd);padding:2px 6px;}
+
+/* POWER USE */
+.pow-box{width:100%;max-width:320px;background:var(--sf);border:1px solid #3a2a00;padding:14px 16px;margin-bottom:12px;}
+.pow-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--gold);margin-bottom:6px;}
+.pow-desc{font-family:'Special Elite',cursive;font-size:11px;color:var(--mu);line-height:1.5;margin-bottom:10px;}
+.pow-sel{background:var(--bg);border:1px solid var(--bd);color:var(--tx);font-family:'Oswald',sans-serif;font-size:14px;padding:8px 10px;width:100%;outline:none;margin-bottom:8px;appearance:none;}
+.pow-ta{background:var(--bg);border:1px solid var(--bd);color:var(--tx);font-family:'Oswald',sans-serif;font-size:14px;padding:8px 10px;width:100%;outline:none;resize:none;min-height:64px;margin-bottom:8px;}
+.pow-do{background:#1a1200;border:1px solid #3a2a00;color:var(--gold);font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;padding:10px;width:100%;cursor:pointer;margin-bottom:4px;}
+.pow-skip{background:none;border:none;color:var(--dm);font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;padding:6px;width:100%;}
+
+/* KUKLA MESSAGE */
+#s-kukla{background:#0a0000;align-items:center;justify-content:center;padding:32px 24px;text-align:center;flex-direction:column;}
+.kuk-t{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--red);margin-bottom:8px;}
+.kuk-f{font-family:'Special Elite',cursive;font-size:12px;color:var(--mu);letter-spacing:2px;margin-bottom:24px;}
+.kuk-box{width:100%;max-width:320px;background:#1a0505;border:2px solid var(--red);padding:20px;margin-bottom:24px;}
+.kuk-msg{font-family:'Oswald',sans-serif;font-size:18px;font-weight:300;color:var(--tx);line-height:1.5;}
+.kuk-w{font-family:'Special Elite',cursive;font-size:11px;color:#cc4444;letter-spacing:1px;margin-top:12px;}
+
+/* TRANSITION */
+#s-trans{background:var(--bg);align-items:center;justify-content:center;text-align:center;padding:40px 24px;}
+.tr-r{font-family:'Special Elite',cursive;font-size:12px;letter-spacing:4px;color:var(--dm);margin-bottom:8px;text-transform:uppercase;}
+.tr-n{font-family:'Bebas Neue',sans-serif;font-size:96px;color:var(--gold);line-height:1;}
+.tr-l{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:4px;color:var(--mu);margin-bottom:48px;}
+
+/* GAME */
+#s-game{background:var(--bg);flex-direction:column;}
+.ghdr{padding:16px 20px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;}
+.gtl{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--gold);}
+.gbdg{font-family:'Special Elite',cursive;font-size:11px;color:var(--mu);letter-spacing:1px;border:1px solid var(--bd);padding:4px 10px;}
+.gcnt{flex:1;padding:20px;overflow-y:auto;}
+.ag{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:16px;}
+.ac{background:var(--sf);border:1px solid var(--bd);padding:8px 12px;display:flex;align-items:center;gap:8px;}
+.ac.folk{border-color:#3a3000;opacity:.65;}
+.adot{width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;}
+.ac.folk .adot{background:#8B6914;}
+.aname{font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:1px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ga{background:var(--sf);border:1px solid var(--bd);color:var(--tx);font-family:'Oswald',sans-serif;font-size:15px;letter-spacing:2px;text-transform:uppercase;padding:14px;cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;width:100%;}
+.ga.gold{border-color:#3a2a00;background:#1a1200;color:var(--gold);}
+
+/* CARD FLIP (game screen) */
+.fw{perspective:900px;margin-bottom:14px;cursor:pointer;}
+.fi{position:relative;width:100%;transition:transform .5s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d;}
+.fw.fp .fi{transform:rotateY(180deg);}
+.ff,.fb{backface-visibility:hidden;-webkit-backface-visibility:hidden;}
+.fb{position:absolute;top:0;left:0;width:100%;min-height:100%;transform:rotateY(180deg);}
+.gff{background:var(--sf);border:1px solid var(--bd);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;}
+.gfl{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:var(--dm);}
+.gfh{font-family:'Special Elite',cursive;font-size:10px;color:var(--dm);letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
+.gfi{font-size:26px;opacity:.12;}
+.gc{background:var(--sf);border:1px solid var(--bd);border-left:4px solid var(--gold);padding:18px 20px;}
+.gt{font-family:'Special Elite',cursive;font-size:10px;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;}
+.gtx{font-family:'Oswald',sans-serif;font-size:17px;font-weight:300;color:var(--tx);line-height:1.4;}
+.sff{background:#140606;border:1px solid #2a1010;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;}
+.sfl{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:#3a1818;}
+.sfh{font-family:'Special Elite',cursive;font-size:10px;color:#3a1818;letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
+.sfi{font-size:26px;opacity:.1;}
+.skc{background:#1a0a0a;border:1px solid #3a1a1a;border-left:4px solid var(--red);padding:18px 20px;}
+.skt{font-family:'Special Elite',cursive;font-size:10px;letter-spacing:3px;color:var(--red);text-transform:uppercase;margin-bottom:6px;}
+.skg{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--tx);margin-bottom:4px;}
+.skx{font-family:'Special Elite',cursive;font-size:13px;color:#cc8888;line-height:1.5;}
+
+/* DISCUSSION TIMER */
+#s-disc{background:var(--bg);align-items:center;justify-content:center;text-align:center;padding:40px 24px;flex-direction:column;}
+.dl{font-family:'Special Elite',cursive;font-size:11px;letter-spacing:4px;color:var(--mu);text-transform:uppercase;margin-bottom:12px;}
+.dtop{font-family:'Oswald',sans-serif;font-size:15px;font-weight:300;color:var(--mu);line-height:1.4;max-width:300px;margin:0 auto 36px;}
+.trw{position:relative;width:200px;height:200px;margin:0 auto 32px;}
+.trs{width:200px;height:200px;transform:rotate(-90deg);}
+.trb{fill:none;stroke:var(--bd);stroke-width:6;}
+.trf{fill:none;stroke:var(--gold);stroke-width:6;stroke-linecap:round;stroke-dasharray:565;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear,stroke .5s;}
+.trf.urg{stroke:var(--red);}
+.tnw{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.tnd{font-family:'Bebas Neue',sans-serif;font-size:64px;color:var(--tx);line-height:1;letter-spacing:2px;transition:color .5s;}
+.tnd.urg{color:var(--red);}
+.tsb{font-family:'Special Elite',cursive;font-size:11px;color:var(--dm);letter-spacing:2px;margin-top:4px;}
+.tct{display:flex;gap:12px;justify-content:center;margin-bottom:20px;}
+.tb{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;padding:12px 20px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);cursor:pointer;min-width:80px;}
+.tb.tp{background:#1a1200;border-color:#3a2a00;color:var(--gold);}
+.tb.ta{font-size:14px;color:var(--mu);}
+.tsk{font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;background:none;border:none;color:var(--dm);cursor:pointer;padding:8px 16px;margin-top:8px;}
+
+/* VOTING */
+#s-vote{background:radial-gradient(ellipse at 50% 0%,#1a0500,#0A0A0A 60%);align-items:center;justify-content:center;padding:32px 24px;text-align:center;flex-direction:column;}
+.vpr{font-family:'Special Elite',cursive;font-size:11px;letter-spacing:3px;color:var(--red);text-transform:uppercase;margin-bottom:8px;}
+.vn{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:3px;color:var(--tx);margin-bottom:4px;}
+.vi{font-family:'Special Elite',cursive;font-size:12px;color:var(--mu);letter-spacing:2px;margin-bottom:24px;}
+.vc{width:100%;max-width:320px;background:var(--sf);border:2px solid var(--bd);padding:24px;margin:0 auto 16px;cursor:pointer;}
+.vc.op{border-color:var(--red);background:#180808;cursor:default;}
+.vlk{font-size:36px;opacity:.3;margin-bottom:8px;}
+.vtp{font-family:'Special Elite',cursive;font-size:11px;color:var(--dm);letter-spacing:3px;text-transform:uppercase;margin-top:10px;}
+.vos{display:flex;flex-direction:column;gap:8px;width:100%;}
+.vo{background:#111;border:1px solid var(--bd);padding:14px 16px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--tx);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;transition:all .15s;}
+.vo:active{background:#2a0808;border-color:var(--red);}
+.vo.sel{background:#2a0808;border-color:var(--red);color:#ff8888;}
+.vo.dis{opacity:.25;pointer-events:none;}
+.var{color:var(--dm);font-size:16px;}
+
+/* RESULTS */
+#s-res{background:var(--bg);align-items:center;justify-content:center;padding:40px 24px;text-align:center;flex-direction:column;}
+.rl{font-family:'Special Elite',cursive;font-size:11px;letter-spacing:4px;color:var(--mu);text-transform:uppercase;margin-bottom:16px;}
+.re{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,14vw,64px);background:linear-gradient(180deg,#ff6666,var(--red));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:8px;}
+.rsb{font-family:'Special Elite',cursive;font-size:13px;color:var(--mu);letter-spacing:2px;margin-bottom:16px;}
+.tie-box{font-family:'Special Elite',cursive;font-size:12px;color:var(--gold);letter-spacing:1px;padding:10px 14px;border:1px solid #3a2a00;background:#1a1200;margin-bottom:16px;}
+.vt{width:100%;max-width:320px;margin-bottom:28px;}
+.trow{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd);}
+.trow:last-child{border-bottom:none;}
+.trn{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:1px;min-width:80px;text-align:left;}
+.trc{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--mu);min-width:30px;text-align:right;}
+.trow.elim .trc{color:var(--red);}
+.tbw{flex:1;margin:0 12px;height:4px;background:var(--bd);border-radius:2px;overflow:hidden;}
+.tbar{height:100%;background:var(--dm);border-radius:2px;transition:width .6s;}
+.trow.elim .tbar{background:var(--red);}
+
+/* FINAL */
+#s-final{background:radial-gradient(ellipse at 50% 20%,#1a0a00,#0A0A0A 70%);align-items:center;justify-content:center;text-align:center;padding:40px 24px;flex-direction:column;}
+.fl{font-family:'Special Elite',cursive;font-size:11px;letter-spacing:4px;color:var(--mu);margin-bottom:16px;text-transform:uppercase;}
+.fw-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,16vw,72px);background:linear-gradient(180deg,var(--gl),var(--gold) 60%,#8B6914);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:8px;}
+.fsub{font-family:'Special Elite',cursive;font-size:13px;color:var(--mu);letter-spacing:2px;margin-bottom:40px;}
+.frv{width:100%;max-width:320px;text-align:left;margin-bottom:40px;}
+.ri{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd);flex-wrap:wrap;gap:6px;}
+.rn{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:1px;}
+.rc{display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+.rt{font-family:'Special Elite',cursive;font-size:9px;letter-spacing:1px;padding:3px 6px;border:1px solid;}
+.rt.id{color:#8888cc;border-color:#443366;}
+.rt.pw{color:var(--gold);border-color:#443300;}
+.rt.co{color:#88cc88;border-color:#224422;}
+
+#s-rules{flex-direction:column;}
+::-webkit-scrollbar{width:2px;}::-webkit-scrollbar-thumb{background:var(--bd);}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="s-splash" class="screen active">
+  <div>
+    <p class="sp-eye">A Social Deduction Game</p>
+    <p class="sp-trust">TRUST NO</p>
+    <div class="sp-main">CANDIDATE</div>
+    <div class="sp-div"></div>
+    <p class="sp-sub">Promise everything. Trust no one.</p>
+    <button class="btn-g" onclick="SS('s-players')">YENİ OYUN</button><br>
+    <button class="btn-gh" onclick="SS('s-rules')">KURALLAR</button>
+    <div class="sp-badges"><span class="badge">4-8 Oyuncu</span><span class="badge">45-60 dk</span><span class="badge">14+</span></div>
+  </div>
+</div>
+
+<!-- RULES -->
+<div id="s-rules" class="screen">
+  <div class="sh"><button class="bk" onclick="SS('s-splash')">← Geri</button><span class="sh-t">KURALLAR</span></div>
+  <div class="sc" style="font-family:'Special Elite',cursive;font-size:13px;line-height:1.8;color:var(--mu);">
+    <p style="color:var(--gold);font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;margin-bottom:8px;">AMAÇ</p>
+    <p style="margin-bottom:20px;">Son 1 kişi kalana kadar oyun devam eder. <strong style="color:var(--tx);">Kendine oy veremezsin.</strong> En çok oy alan elenir. Çoğunluk sağlanamazsa kimse elenmez.</p>
+    <p style="color:var(--gold);font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;margin-bottom:8px;">TUR AKIŞI</p>
+    <p style="margin-bottom:6px;"><strong style="color:var(--tx);">1.</strong> Gündem + skandal kartları açılır (flip).</p>
+    <p style="margin-bottom:6px;"><strong style="color:var(--tx);">2.</strong> 5 dk tartışma — biter bitmez oylama başlar.</p>
+    <p style="margin-bottom:6px;"><strong style="color:var(--tx);">3.</strong> Herkes sırayla telefonu alır: rolünü görür, gücünü kullanır veya geçer, oy kullanır.</p>
+    <p style="margin-bottom:20px;"><strong style="color:var(--tx);">4.</strong> En çok oy alan elenir. Çoğunluk yoksa kimse elenmez. Halk da oy kullanır.</p>
+    <p style="color:var(--gold);font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;margin-bottom:8px;">GÜÇ KARTLARI</p>
+    <p style="margin-bottom:4px;"><strong style="color:var(--tx);">Kukla:</strong> Bir adayı seç ve talimat yaz. O kişi sadece senin mesajını görür ve güç kullanamaz. Hedefin senden önce sırası geldiyse etki bir sonraki turda olur.</p>
+    <p style="margin-bottom:4px;"><strong style="color:var(--tx);">Koalisyon:</strong> Gizli aday — o kazanırsa sen de.</p>
+    <p style="margin-bottom:4px;"><strong style="color:var(--tx);">Medya:</strong> Skandal kartını istediğin adaya yönlendir. O tur 2 skandal kartı açılır.</p>
+    <p style="margin-bottom:4px;"><strong style="color:var(--tx);">Veto:</strong> Bir kişinin oyunu geçersiz say.</p>
+    <p><strong style="color:var(--tx);">Dokunulmazlık:</strong> Skandal, Kukla ve Veto'ya karşı koruma.</p>
+  </div>
+  <div class="sb"><button class="btn-g" style="max-width:100%;" onclick="SS('s-players')">OYUNA BAŞLA →</button></div>
+</div>
+
+<!-- PLAYERS -->
+<div id="s-players" class="screen">
+  <div class="sh"><button class="bk" onclick="SS('s-splash')">← Geri</button><span class="sh-t">OYUNCULAR</span><span class="sh-s">1/4</span></div>
+  <div class="sc">
+    <div class="sl">Adayları Ekle</div>
+    <div class="plist" id="plist"></div>
+    <button class="add-p" onclick="addP()">+ OYUNCU EKLE</button>
+    <p class="warn" id="pwarn"></p>
+  </div>
+  <div class="sb"><button class="btn-g" style="max-width:100%;" onclick="goSettings()">DEVAM →</button></div>
+</div>
+
+<!-- SETTINGS -->
+<div id="s-settings" class="screen">
+  <div class="sh"><button class="bk" onclick="SS('s-players')">← Geri</button><span class="sh-t">AYARLAR</span><span class="sh-s">2/4</span></div>
+  <div class="sc">
+    <div class="sl">Güç Kartları</div>
+    <div class="tg" id="pgrid"></div>
+    <div class="sl">İdeoloji Kartları</div>
+    <div class="tg" id="igrid"></div>
+  </div>
+  <div class="sb"><button class="btn-g" style="max-width:100%;" onclick="goEditor()">DEVAM →</button></div>
+</div>
+
+<!-- CARD EDITOR -->
+<div id="s-editor" class="screen">
+  <div class="sh"><button class="bk" onclick="SS('s-settings')">← Geri</button><span class="sh-t">KART EDİTÖRÜ</span><span class="sh-s">3/4</span></div>
+  <div class="etabs">
+    <button class="etab on" onclick="eTab('g')">GÜNDEM</button>
+    <button class="etab" onclick="eTab('s')">SKANDAL</button>
+  </div>
+  <div id="ep-g" class="ep on"></div>
+  <div id="ep-s" class="ep"></div>
+  <div class="sb"><button class="btn-g" style="max-width:100%;" onclick="startGame()">OYUNU BAŞLAT →</button></div>
+</div>
+
+<!-- SECRET CARD + POWER USE -->
+<div id="s-card" class="screen">
+  <p class="cpn" id="cpn">OYUNCU</p>
+  <p class="cinstr" id="cinstr">Telefonu al — kartını gizlice gör</p>
+  <div class="role-flip-wrap" id="rfwrap">
+    <div class="role-flip-inner" id="rfi">
+      <div class="role-front">
+        <div class="clock">🔒</div>
+        <p class="ctap">Dokunarak Aç</p>
+        <p class="clogo" style="margin-top:14px;">TRUST NO CANDIDATE</p>
+      </div>
+      <div class="role-back" id="role-back-content"></div>
+    </div>
+  </div>
+  <div id="pow-wrap" style="width:100%;max-width:320px;display:none;"></div>
+  <button class="btn-g" id="cnxt" style="max-width:320px;display:none;" onclick="nextCard()">SONRAKI →</button>
+  <p style="font-family:'Special Elite',cursive;font-size:11px;color:var(--dm);text-align:center;margin-top:10px;letter-spacing:1px;">Kimseye gösterme</p>
+</div>
+
+<!-- KUKLA MESSAGE -->
+<div id="s-kukla" class="screen">
+  <div style="width:100%;max-width:360px;text-align:center;">
+    <p class="kuk-t">KUKLA MESAJI</p>
+    <p class="kuk-f" id="kuk-from">— adına —</p>
+    <div class="kuk-box"><p class="kuk-msg" id="kuk-msg">...</p></div>
+    <p class="kuk-w">Bu talimatları takip etmek zorundasın. Bu tur güçlerini kullanamazsın.</p>
+    <button class="btn-g" style="max-width:100%;margin-top:24px;" onclick="SS('s-card');showNextAfterKukla()">ANLADIM →</button>
+  </div>
+</div>
+
+<!-- TRANSITION -->
+<div id="s-trans" class="screen">
+  <div>
+    <p class="tr-r">Tur</p>
+    <p class="tr-n" id="tr-n">1</p>
+    <p class="tr-l">BAŞLIYOR</p>
+    <button class="btn-g" onclick="showGame()">DEVAM →</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="s-game" class="screen">
+  <div class="ghdr"><span class="gtl">TRUST NO CANDIDATE</span><span class="gbdg" id="gbdg">TUR 1</span></div>
+  <div class="gcnt" id="gcnt"></div>
+  <div class="sb">
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button class="ga gold" onclick="startDisc()"><span>TARTIŞMAYI BAŞLAT (5 DK)</span><span style="color:var(--dm);">▶</span></button>
+      <button class="ga" onclick="startVote()"><span>TARTIŞMAYI ATLA → OYLAMA</span><span style="color:var(--dm);">→</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- DISCUSSION -->
+<div id="s-disc" class="screen">
+  <p class="dl">Tartışma Süresi</p>
+  <p class="dtop" id="dtop"></p>
+  <div class="trw">
+    <svg class="trs" viewBox="0 0 200 200"><circle class="trb" cx="100" cy="100" r="90"/><circle class="trf" id="trf" cx="100" cy="100" r="90"/></svg>
+    <div class="tnw"><div class="tnd" id="tnd">5:00</div><div class="tsb" id="tsb">kaldı</div></div>
+  </div>
+  <div class="tct">
+    <button class="tb tp" id="pbtn" onclick="toggleP()">DURAKLAT</button>
+    <button class="tb ta" onclick="addT(30)">+30 SN</button>
+  </div>
+  <button class="tsk" onclick="startVote()">Atla → Oylama</button>
+</div>
+
+<!-- VOTING -->
+<div id="s-vote" class="screen">
+  <p class="vpr" id="vpr">OYLAMA — 1 / 4</p>
+  <p class="vn" id="vn">OYUNCU</p>
+  <p class="vi" id="vi">Telefonu al — gizlice oyunu kullan</p>
+  <div class="vc" id="vc" onclick="revealV()">
+    <div id="vbk" style="text-align:center;"><div class="vlk">🗳</div><p class="clogo">OY KARTI</p><p class="vtp">Dokunarak Aç</p></div>
+    <div id="vfr" style="display:none;width:100%;">
+      <p style="font-family:'Special Elite',cursive;font-size:11px;color:var(--mu);letter-spacing:2px;margin-bottom:14px;text-transform:uppercase;text-align:center;">Kimi elemek istiyorsun?</p>
+      <div class="vos" id="vos"></div>
+    </div>
+  </div>
+  <button class="btn-r" id="vcnf" onclick="confirmV()">ONAYLA →</button>
+  <p style="font-family:'Special Elite',cursive;font-size:11px;color:var(--dm);text-align:center;margin-top:12px;letter-spacing:1px;">Seçimini kimseye gösterme</p>
+</div>
+
+<!-- RESULTS -->
+<div id="s-res" class="screen">
+  <div style="display:flex;flex-direction:column;align-items:center;width:100%;max-width:380px;">
+    <p class="rl" id="rlbl">Elendi</p>
+    <p class="re" id="relim">—</p>
+    <p class="rsb" id="rsb">oy ile elendi</p>
+    <div class="tie-box" id="tie-box" style="display:none;"></div>
+    <div class="vt" id="vtally"></div>
+    <button class="btn-g" style="max-width:100%;" onclick="afterElim()">DEVAM →</button>
+  </div>
+</div>
+
+<!-- FINAL -->
+<div id="s-final" class="screen">
+  <div style="width:100%;max-width:380px;text-align:center;">
+    <p class="fl" id="flbl">Cumhurbaşkanı Seçildi</p>
+    <p class="fw-name" id="fwin">—</p>
+    <p class="fsub" id="fsub">Tebrikler!</p>
+    <div class="frv" id="frv"></div>
+    <button class="btn-g" style="max-width:100%;" onclick="newGame()">YENİ OYUN</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════
+const POWERS=[
+  {id:'kukla',name:'Kukla',desc:'Bir adayı seç, ona talimat yaz. O kişi sadece senin mesajını görür ve güç kullanamaz.'},
+  {id:'koalisyon',name:'Koalisyon',desc:'Gizli aday — o kazanırsa sen de kazanırsın.'},
+  {id:'medya',name:'Medya',desc:'Skandal kartını istediğin adaya yönlendir. O tur 2 skandal kartı açılır.'},
+  {id:'veto',name:'Veto',desc:'Bu turda bir kişinin oyu geçersiz sayılır.'},
+  {id:'dokunulmazlik',name:'Dokunulmazlık',desc:"Skandal, Kukla ve Veto'ya karşı koruma."},
+];
+const IDEO=[
+  {id:'liberal',name:'Liberal',icon:'🕊️',color:'#4A90E2',desc:'Bireysel özgürlük, sivil haklar ve açık toplum.'},
+  {id:'socialist',name:'Socialist',icon:'⚙️',color:'#E94E4E',desc:'Ekonomik eşitlik ve güçlü sosyal sistemler.'},
+  {id:'communist',name:'Communist',icon:'🔨',color:'#C0392B',desc:'Sınıfsız toplum ve radikal dönüşüm.'},
+  {id:'conservative',name:'Conservative',icon:'🏛️',color:'#2C3E50',desc:'Gelenek, istikrar ve kademeli değişim.'},
+  {id:'environmentalist',name:'Environmentalist',icon:'🌿',color:'#27AE60',desc:'Doğa, sürdürülebilirlik ve ekoloji.'},
+  {id:'populist',name:'Populist',icon:'📢',color:'#F39C12',desc:'Halkı elitlere karşı temsil eder.'},
+  {id:'feminist',name:'Feminist',icon:'♀️',color:'#E91E63',desc:'Toplumsal cinsiyet eşitliği ve sosyal adalet.'},
+  {id:'nationalist',name:'Nationalist',icon:'🛡️',color:'#8E44AD',desc:'Ulusal kimlik, birlik ve egemenlik.'},
+  {id:'socialdem',name:'Social Democrat',icon:'🤝',color:'#FF6B6B',desc:'Refah devleti ile demokrasinin dengesi.'},
+  {id:'technocrat',name:'Technocrat',icon:'📊',color:'#34495E',desc:'Veri ve uzmanlığa dayalı yönetim.'},
+  {id:'anarchist',name:'Anarchist',icon:'🅰️',color:'#777',desc:'Otoriteyi ve devleti reddeder.'},
+  {id:'maoist',name:'Maoist',icon:'🚩',color:'#B03A2E',desc:'Köylü temelli devrimci mücadele.'},
+  {id:'agrarian',name:'Agrarian',icon:'🌾',color:'#7D6608',desc:'Kırsal yaşam ve tarım ekonomisi.'},
+  {id:'islamist',name:'Islamist',icon:'🕌',color:'#145A32',desc:'Toplumun dini ilkeler ve ahlaki düzen tarafından yönlendirilmesi gerektiğine inanır.'},
+  {id:'evangelist',name:'Evangelist',icon:'✝️',color:'#7B241C',desc:'Güçlü inanç, ahlaki değerler ve inancın toplumda yayılmasını savunur.'},
+  {id:'zionist',name:'Zionist',icon:'✡️',color:'#1F618D',desc:'Kimlik, birlik ve bir halkın gücünü önceliklendirir. Güvenlik ve kolektif amaç üzerine odaklanır.'},
+];
+const ALL_G=[
+  {id:'g01',type:'normal',text:'Ekonomik kriz derinleşiyor — işsizlik rekor kırdı. Ne yaparsınız?'},
+  {id:'g02',type:'normal',text:'Eğitim sistemi çöktü, öğretmenler grevde. Acil çözümünüz?'},
+  {id:'g03',type:'normal',text:'Sağlık harcamaları bütçeyi deldi. Hastaneler kapanıyor.'},
+  {id:'g04',type:'normal',text:'Komşu ülkeyle sınırda gerilim tırmanıyor. Savaş mı, diplomasi mi?'},
+  {id:'g05',type:'normal',text:'Büyük şehirlerde konut krizi — gençler ev alamıyor.'},
+  {id:'g06',type:'normal',text:'İklim felaketi kapıda — fabrikalar kapatılsın mı?'},
+  {id:'g07',type:'normal',text:'Sosyal medya yasakları gündemde. Sansür mü, güvenlik mi?'},
+  {id:'g08',type:'normal',text:"Emeklilik yaşı 70'e çıkarılması teklif edildi."},
+  {id:'g09',type:'normal',text:'Göç dalgası büyüyor — sınır politikanız ne?'},
+  {id:'g10',type:'normal',text:'Vergi kaçakçılığı raporu açıklandı — önlem var mı?'},
+  {id:'g11',type:'normal',text:'Yapay zeka milyonlarca işi ortadan kaldırıyor.'},
+  {id:'g12',type:'normal',text:'Üniversite harçları 5 katına çıkarıldı. Tepkiniz?'},
+  {id:'g13',type:'normal',text:'Ordu bütçesi mü, eğitim bütçesi mi? Kaynaklar kısıtlı.'},
+  {id:'g14',type:'normal',text:'Devlet kedisi başkentten kaçtı, millet ikiye bölündü.'},
+  {id:'g15',type:'normal',text:'Uzaylılar başkente indi, randevu istiyor.'},
+  {id:'g16',type:'normal',text:'Rakip ülke bizim milli yemeğimizi sahiplendi. Tepkiniz?'},
+  {id:'g17',type:'normal',text:'Tüm araçlar yasaklandı — sadece bisiklet kalacak önerisi mecliste.'},
+  {id:'g18',type:'normal',text:'Hafta sonu tatili 3 güne çıkarılsın mı? Ekonomistler karşı.'},
+  {id:'g19',type:'normal',text:'Tüm siyasetçilerin sosyal medya hesapları kamuya açık olacak.'},
+  {id:'g20',type:'normal',text:'Gençlerin yüzde altmışı yurt dışına göç etmek istiyor. Ne yaparsınız?'},
+  {id:'g21',type:'normal',text:'Barış süreci başlatılıyor. Destekler misiniz?'},
+  {id:'g22',type:'normal',text:'Özel okullar kapatılsın mı? Eğitim tamamen devlet kontrolüne geçecek.'},
+  {id:'g23',type:'normal',text:'Uyuşturucu kullanımı yasallaştırılsın mı?'},
+  {id:'g24',type:'normal',text:'BM, ülkelerin yılda 1 gün elektriksiz yaşamasını zorunlu kılıyor.'},
+  {id:'g25',type:'normal',text:'BM tartışmalı bölgeyi "boş alan" ilan etti. Asker çeker misiniz?'},
+  {id:'g26',type:'normal',text:'AB katılım şartı: ulusal marşın daha neşeli versiyonu bestelenecek.'},
+  {id:'g27',type:'normal',text:'Bilim insanları kanıtladı: yalan söyleyenlerin burnu uzuyor.'},
+  {id:'g28',type:'suclama',text:'İstihbarat raporuna göre bir aday dış güçlerle temas kurdu.'},
+  {id:'g29',type:'suclama',text:'Bir adayın rakibine rüşvet teklif ettiğine dair ses kaydı sızdı.'},
+  {id:'g30',type:'suclama',text:'Bir adayın geçmişte tamamen farklı bir ideolojiyi savunduğu belgelendi.'},
+  {id:'g31',type:'suclama',text:'Devlet kedisini kaçıranın bu masadaki bir aday olduğu kanıtlandı.'},
+  {id:'g32',type:'suclama',text:'Bir adayın uzaylılarla gizli ittifak müzakeresi yaptığı ortaya çıktı.'},
+  {id:'g33',type:'erken',text:'Halk sandığa gitmek istiyor — seçim bugün!'},
+  {id:'g34',type:'erken',text:'Anayasa mahkemesi seçimin bu hafta yapılmasına hükmetti!'},
+];
+const ALL_S=[
+  {id:'s01',text:'Yurt dışında gizli bir banka hesabın olduğu ortaya çıktı.'},
+  {id:'s02',text:'Rakip partinin toplantısına katıldığın fotoğraflar sızdı.'},
+  {id:'s03',text:'Seçim kampanyanı yabancı bir şirketin finanse ettiği iddia ediliyor.'},
+  {id:'s04',text:'Bugünkü vaatlerinle çelişen eski röportaj kayıtları ortaya çıktı.'},
+  {id:'s05',text:'Yakın çevrenden biri devlet ihalesini usulsüz aldı.'},
+  {id:'s06',text:'Farklı bir ülkenin vatandaşlığına başvurduğun belgelendi.'},
+  {id:'s07',text:'Bir lobici şirketiyle gizli görüşme yaptığın kayıt altına alındı.'},
+  {id:'s08',text:'Vergi borcunu seçim döneminde ertelettirdiğin öğrenildi.'},
+  {id:'s09',text:'Seçim öncesi anketleri manipüle etmek için bir şirkete para ödedin.'},
+  {id:'s10',text:'Aldığın kararın binlerce kişiyi işsiz bıraktığı raporlandı.'},
+  {id:'s11',text:'Eski iş ortağın adına yasadışı bağış topladığını itiraf etti.'},
+  {id:'s12',text:'Uzaylılarla yazışmalarının ele geçirildiği iddia ediliyor.'},
+  {id:'s13',text:'Miting konuşmanı bir yapay zekanın yazdığı ortaya çıktı.'},
+  {id:'s14',text:'Seçim otobüsünde aranması olan biriyle görüntülendin.'},
+  {id:'s15',text:'Gizli ritüel yaptığın iddia edilen video viral oldu.'},
+  {id:'s16',text:'Milli marşı yanlış söylediğin an kameraya yansıdı.'},
+  {id:'s17',text:'Akrabanın kamu kurumunda liyakatsiz şekilde işe alındığı belgelendi.'},
+  {id:'s18',text:'Rakip aday hakkında sahte haber yaydığına dair bağlantın ortaya çıktı.'},
+  {id:'s19',text:'Canlı yayında mikrofon kapalı sanıp küfür ettin.'},
+  {id:'s20',text:'Uygunsuz görüntülerinin olduğu bir kaset ortaya çıktı, halk kızgın!'},
+];
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let G = {
+  players: [],
+  activePow: new Set(POWERS.map(p=>p.id)),
+  activeIdeo: new Set(IDEO.map(i=>i.id)),
+  activeG: new Set(ALL_G.map(g=>g.id)),
+  activeS: new Set(ALL_S.map(s=>s.id)),
+  asgn: {},           // {name: {pow,ideo,coalition,powUsed}}
+  alive: [],
+  folk: [],
+  round: 1,
+  usedG: [],
+  skPool: [],         // shuffled active skandal list
+  skIdx: 0,
+  gundem: null,
+  // per-round power effects
+  mediaTgt: null,     // medya override for skandal target
+  vetoTgt: null,      // whose vote is nullified
+  kuklaNextRound: null,  // {to, msg} — applied at start of NEXT round's card phase
+  kuklaThisRound: null,  // {to, msg} — active this round
+  // card phase
+  cardIdx: 0,
+  cardPhaseVoters: [], // all players shown cards this round (alive+folk)
+  kuklaReturnIdx: null,
+  // vote phase
+  allVoters: [],
+  voteIdx: 0,
+  votes: {},
+  selVote: null,
+  pendingElim: null,
+  isTie: false,
+  // timer
+  tSec: 300, tTotal: 300, tRunning: false, tInt: null,
+};
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+function SS(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function shuf(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function rnd(a){return a[Math.floor(Math.random()*a.length)];}
+function pad(n){return String(n).padStart(2,'0');}
+function saveP(){try{localStorage.setItem('tnc_p',JSON.stringify(G.players));}catch(e){}}
+function loadP(){try{const s=localStorage.getItem('tnc_p');if(s){const p=JSON.parse(s);if(Array.isArray(p)&&p.length)return p;}}catch(e){}return['','','',''];}
+
+// ═══════════════════════════════════════════════════════
+// PLAYERS
+// ═══════════════════════════════════════════════════════
+function renderP(){
+  const l=document.getElementById('plist');l.innerHTML='';
+  G.players.forEach((p,i)=>{
+    const d=document.createElement('div');d.className='pitem';
+    d.innerHTML=`<span class="pnum">${i+1}</span><input class="pin" type="text" placeholder="Aday adı..." value="${p}" oninput="G.players[${i}]=this.value;saveP()" maxlength="20"><button class="pdel" onclick="delP(${i})">✕</button>`;
+    l.appendChild(d);
+  });
+}
+function addP(){if(G.players.length>=8)return;G.players.push('');saveP();renderP();setTimeout(()=>{document.querySelectorAll('.pin').item(G.players.length-1)?.focus();},50);}
+function delP(i){G.players.splice(i,1);saveP();renderP();}
+function goSettings(){
+  const v=G.players.filter(p=>p.trim());
+  if(v.length<4){document.getElementById('pwarn').textContent='En az 4 oyuncu gerekli.';return;}
+  G.players=v;saveP();renderSettings();SS('s-settings');
+}
+
+// ═══════════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════════
+function renderSettings(){
+  const pg=document.getElementById('pgrid');pg.innerHTML='';
+  POWERS.forEach(p=>{
+    const d=document.createElement('div');d.className='ti'+(G.activePow.has(p.id)?' on':'');
+    d.innerHTML=`<div class="tn">${p.name}</div><div class="td">${p.desc.substring(0,60)}...</div>`;
+    d.onclick=()=>{G.activePow.has(p.id)?G.activePow.delete(p.id):G.activePow.add(p.id);d.classList.toggle('on');};
+    pg.appendChild(d);
+  });
+  const ig=document.getElementById('igrid');ig.innerHTML='';
+  IDEO.forEach(id=>{
+    const d=document.createElement('div');d.className='ti'+(G.activeIdeo.has(id.id)?' on':'');
+    d.innerHTML=`<div class="tn">${id.icon} ${id.name}</div><div class="td">${id.desc}</div>`;
+    d.onclick=()=>{G.activeIdeo.has(id.id)?G.activeIdeo.delete(id.id):G.activeIdeo.add(id.id);d.classList.toggle('on');};
+    ig.appendChild(d);
+  });
+}
+function goEditor(){renderEditor();SS('s-editor');}
+
+// ═══════════════════════════════════════════════════════
+// CARD EDITOR
+// ═══════════════════════════════════════════════════════
+function eTab(t){
+  document.querySelectorAll('.etab').forEach((b,i)=>b.classList.toggle('on',['g','s'][i]===t));
+  document.getElementById('ep-g').classList.toggle('on',t==='g');
+  document.getElementById('ep-s').classList.toggle('on',t==='s');
+}
+function renderEditor(){
+  // Gundem
+  const gp=document.getElementById('ep-g');
+  const gcnt=()=>ALL_G.filter(g=>G.activeG.has(g.id)).length;
+  gp.innerHTML=`<div class="ecnt" id="ecg">${gcnt()} / ${ALL_G.length} aktif</div>`;
+  ALL_G.forEach(g=>{
+    const on=G.activeG.has(g.id);
+    const tc=g.type==='suclama'?'#cc4444':g.type==='erken'?'var(--gold)':'var(--mu)';
+    const tl=g.type==='suclama'?'SUÇLAMA':g.type==='erken'?'ERKEN':'NORMAL';
+    const d=document.createElement('div');d.className='cei'+(on?'':' off');
+    d.innerHTML=`<span class="cetype" style="color:${tc};border-color:${tc};">${tl}</span><span class="cetext">${g.text}</span><span class="cetog"></span>`;
+    d.onclick=()=>{G.activeG.has(g.id)?G.activeG.delete(g.id):G.activeG.add(g.id);d.classList.toggle('off');document.getElementById('ecg').textContent=`${gcnt()} / ${ALL_G.length} aktif`;};
+    gp.appendChild(d);
+  });
+  // Skandal
+  const sp=document.getElementById('ep-s');
+  const scnt=()=>ALL_S.filter(s=>G.activeS.has(s.id)).length;
+  sp.innerHTML=`<div class="ecnt" id="ecs">${scnt()} / ${ALL_S.length} aktif</div>`;
+  ALL_S.forEach(s=>{
+    const on=G.activeS.has(s.id);
+    const d=document.createElement('div');d.className='cei'+(on?'':' off');
+    d.innerHTML=`<span class="cetype" style="color:var(--red);border-color:var(--red);">SKANDAL</span><span class="cetext">${s.text}</span><span class="cetog"></span>`;
+    d.onclick=()=>{G.activeS.has(s.id)?G.activeS.delete(s.id):G.activeS.add(s.id);d.classList.toggle('off');document.getElementById('ecs').textContent=`${scnt()} / ${ALL_S.length} aktif`;};
+    sp.appendChild(d);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// START GAME
+// ═══════════════════════════════════════════════════════
+function startGame(){
+  const n=G.players.length;
+  // Assign powers
+  const apl=POWERS.filter(p=>G.activePow.has(p.id));
+  let pp=[];
+  if(apl.length>0){
+    let pool=[...apl];
+    while(pool.length<n)pool=pool.concat(apl.slice(0,n-pool.length));
+    pp=shuf(pool).slice(0,n);
+  }
+  // Assign ideologies
+  const ail=IDEO.filter(i=>G.activeIdeo.has(i.id));
+  let ip=[];
+  if(ail.length>0){
+    let pool=[...ail];
+    while(pool.length<n)pool=pool.concat(ail.slice(0,n-pool.length));
+    ip=shuf(pool).slice(0,n);
+  }
+  G.asgn={};
+  shuf([...Array(n).keys()]).forEach((pi,i)=>{
+    G.asgn[G.players[pi]]={pow:pp[i]||null,ideo:ip[i]||null,coalition:null,powUsed:false};
+  });
+  // Coalition targets
+  G.players.filter(p=>G.asgn[p].pow?.id==='koalisyon').forEach(p=>{
+    G.asgn[p].coalition=rnd(G.players.filter(x=>x!==p));
+  });
+  // Reset state
+  G.alive=[...G.players];
+  G.folk=[];
+  G.round=1;
+  G.usedG=[];
+  G.skIdx=0;
+  G.skPool=shuf(ALL_S.filter(s=>G.activeS.has(s.id)));
+  G.gundem=null;
+  G.mediaTgt=null;
+  G.vetoTgt=null;
+  G.kuklaNextRound=null;
+  G.kuklaThisRound=null;
+  beginCardPhase();
+}
+
+// ═══════════════════════════════════════════════════════
+// CARD PHASE
+// ═══════════════════════════════════════════════════════
+function beginCardPhase(){
+  // Activate any pending kukla
+  G.kuklaThisRound=G.kuklaNextRound;
+  G.kuklaNextRound=null;
+  // Reset per-round power effects (except kukla which was already set)
+  G.mediaTgt=null;
+  G.vetoTgt=null;
+  // Build voter list: alive first, then folk
+  G.cardPhaseVoters=[...G.alive,...G.folk];
+  G.cardIdx=0;
+  showCardScreen();
+}
+
+function showCardScreen(){
+  if(G.cardIdx>=G.cardPhaseVoters.length){
+    showTransition();
+    return;
+  }
+  const pn=G.cardPhaseVoters[G.cardIdx];
+  const isFolk=G.folk.includes(pn);
+  // Update header text
+  document.getElementById('cpn').textContent=pn.toUpperCase()+(isFolk?' (HALK)':'');
+  document.getElementById('cinstr').textContent='Telefonu al — kartını gizlice gör';
+  document.getElementById('pow-wrap').style.display='none';
+  document.getElementById('cnxt').style.display='none';
+
+  const rfwrap=document.getElementById('rfwrap');
+  const rfi=document.getElementById('rfi');
+
+  // Step 1: Instantly hide the card (opacity 0) so the next player can't see previous content
+  rfwrap.style.transition='none';
+  rfwrap.style.opacity='0';
+  rfwrap.style.pointerEvents='none';
+
+  // Step 2: Remove flip without animation (card is invisible)
+  rfi.style.transition='none';
+  rfwrap.classList.remove('flipped');
+  void rfi.offsetWidth; // force reflow
+
+  // Step 3: Clear back content while invisible, then rebuild
+  document.getElementById('role-back-content').innerHTML='';
+  buildRoleBack(pn,isFolk);
+  rfwrap.onclick=doReveal;
+
+  // Step 4: Re-enable transitions and fade card back in
+  requestAnimationFrame(()=>{
+    rfi.style.transition='';
+    rfwrap.style.transition='opacity .2s';
+    rfwrap.style.opacity='1';
+    rfwrap.style.pointerEvents='';
+  });
+
+  SS('s-card');
+}
+
+function buildRoleBack(pn, isFolk){
+  const a=G.asgn[pn];
+  const el=document.getElementById('role-back-content');
+  // Check if kukla'd this round
+  const isKuklaTarget=G.kuklaThisRound&&G.kuklaThisRound.to===pn;
+  let html='<div style="width:100%;display:flex;flex-direction:column;align-items:center;">';
+  if(a.ideo){
+    const ic=a.ideo;
+    html+=`<div class="ctb" style="color:${ic.color};border-color:${ic.color};">İDEOLOJİ</div>
+    <div class="cmt" style="color:${ic.color};font-size:clamp(24px,7vw,36px);">${ic.icon} ${ic.name.toUpperCase()}</div>
+    <div class="cdl" style="background:${ic.color};"></div>
+    <p class="cbt">${ic.desc}</p>`;
+  }
+  if(a.pow){
+    const pc=a.pow.id==='koalisyon'?'#88cc88':'var(--gold)';
+    const pb=a.pow.id==='koalisyon'?'#224422':'#443300';
+    const usedNote=a.powUsed?' <span style="font-size:10px;color:#cc4444;"> — KULLANILDI</span>':'';
+    html+=`<div style="width:100%;border-top:1px solid var(--bd);margin-top:12px;padding-top:12px;">
+      <div class="ctb" style="color:${pc};border-color:${pb};">GÜÇ KARTI${usedNote}</div>
+      <div class="cmt" style="color:${pc};font-size:clamp(20px,6vw,28px);">${a.pow.name.toUpperCase()}</div>
+      <div class="cdl" style="background:${pb};"></div>
+      <p class="cbt">${a.pow.desc}</p>
+      ${a.pow.id==='koalisyon'&&a.coalition?`<p style="margin-top:10px;font-family:'Bebas Neue',sans-serif;font-size:15px;color:#88cc88;">Gizli Adayın: <span style="color:#aaffaa;">${a.coalition}</span></p>`:''}
+    </div>`;
+  }
+  if(!a.ideo&&!a.pow){
+    html+=`<div class="ctb" style="color:var(--mu);border-color:var(--bd);">ADAY</div>
+    <div class="cmt" style="color:var(--tx);font-size:28px;">SERBEST</div>
+    <div class="cdl" style="background:var(--bd);"></div>
+    <p class="cbt">Güç kartın ve ideolojin yok.</p>`;
+  }
+  if(isFolk){
+    html+=`<div style="margin-top:12px;padding:6px 12px;background:#1a1200;border:1px solid #3a2a00;font-family:'Special Elite',cursive;font-size:11px;color:#8B6914;letter-spacing:1px;">HALK — Sadece oy kullanabilirsin</div>`;
+  }
+  html+=`<div class="cub">× 1 KULLANIM</div>`;
+  html+='</div>';
+  el.innerHTML=html;
+  // Store info for post-reveal
+  el.dataset.pn=pn;
+  el.dataset.isFolk=isFolk?'1':'0';
+  el.dataset.isKuklaTarget=isKuklaTarget?'1':'0';
+}
+
+function doReveal(){
+  const rfwrap=document.getElementById('rfwrap');
+  rfwrap.classList.add('flipped');
+  rfwrap.onclick=null; // prevent re-flip
+  const el=document.getElementById('role-back-content');
+  const pn=el.dataset.pn;
+  const isFolk=el.dataset.isFolk==='1';
+  const isKuklaTarget=el.dataset.isKuklaTarget==='1';
+  // Show kukla message button if target
+  if(isKuklaTarget&&G.kuklaThisRound){
+    // Show a button to go to kukla screen
+    document.getElementById('cnxt').style.display='block';
+    document.getElementById('cnxt').textContent='KUKLA MESAJINI GÖR →';
+    document.getElementById('cnxt').onclick=showKuklaMsg;
+    return;
+  }
+  // Show power use if applicable
+  if(!isFolk&&!isKuklaTarget){
+    showPowerUse(pn);
+  } else {
+    // Folk or kukla target: just show next button
+    showNextBtn();
+  }
+}
+
+function showKuklaMsg(){
+  document.getElementById('kuk-from').textContent=`${G.kuklaThisRound.from.toUpperCase()} sana mesaj gönderdi`;
+  document.getElementById('kuk-msg').textContent=G.kuklaThisRound.msg;
+  SS('s-kukla');
+}
+
+function showNextAfterKukla(){
+  SS('s-card');
+  showNextBtn();
+}
+
+function showNextBtn(){
+  document.getElementById('pow-wrap').style.display='none';
+  document.getElementById('cnxt').style.display='block';
+  const isLast=G.cardIdx===G.cardPhaseVoters.length-1;
+  document.getElementById('cnxt').textContent=isLast?'OYUNA BAŞLA →':'SONRAKI OYUNCU →';
+  document.getElementById('cnxt').onclick=nextCard;
+}
+
+function showPowerUse(pn){
+  const a=G.asgn[pn];
+  if(!a.pow||a.powUsed){showNextBtn();return;}
+  const pw=a.pow;
+  const alive=G.alive;
+  const others=alive.filter(p=>p!==pn);
+  const allOthers=[...alive,...G.folk].filter(p=>p!==pn);
+  const wrap=document.getElementById('pow-wrap');
+  wrap.style.display='block';
+  let html=`<div class="pow-box">
+    <div class="pow-title">GÜÇ: ${pw.name.toUpperCase()}</div>
+    <div class="pow-desc">${pw.desc}</div>`;
+  if(pw.id==='kukla'&&others.length>0){
+    html+=`<select class="pow-sel" id="ksel"><option value="">Hedef seç...</option>${others.map(o=>`<option value="${o}">${o}</option>`).join('')}</select>`;
+    html+=`<textarea class="pow-ta" id="kmsg" placeholder="Bu oyuncuya talimatını yaz..."></textarea>`;
+    html+=`<button class="pow-do" onclick="usePow('${pn}','kukla')">UYGULA</button>`;
+    html+=`<button class="pow-skip" onclick="skipPow('${pn}')">Bu tur kullanmıyorum</button>`;
+  } else if(pw.id==='medya'&&others.length>0){
+    html+=`<p style="font-family:'Special Elite',cursive;font-size:11px;color:var(--mu);margin-bottom:8px;">Skandal hangi adaya gitsin? (Normal + ek skandal açılır)</p>`;
+    html+=`<select class="pow-sel" id="msel"><option value="">Hedef seç...</option>${others.map(o=>`<option value="${o}">${o}</option>`).join('')}</select>`;
+    html+=`<button class="pow-do" onclick="usePow('${pn}','medya')">UYGULA</button>`;
+    html+=`<button class="pow-skip" onclick="skipPow('${pn}')">Bu tur kullanmıyorum</button>`;
+  } else if(pw.id==='veto'&&allOthers.length>0){
+    html+=`<p style="font-family:'Special Elite',cursive;font-size:11px;color:var(--mu);margin-bottom:8px;">Kimin oyu geçersiz sayılsın?</p>`;
+    html+=`<select class="pow-sel" id="vsel"><option value="">Hedef seç...</option>${allOthers.map(o=>`<option value="${o}">${o}${G.folk.includes(o)?' (halk)':''}</option>`).join('')}</select>`;
+    html+=`<button class="pow-do" onclick="usePow('${pn}','veto')">UYGULA</button>`;
+    html+=`<button class="pow-skip" onclick="skipPow('${pn}')">Bu tur kullanmıyorum</button>`;
+  } else if(pw.id==='koalisyon'){
+    html+=`<p style="font-family:'Special Elite',cursive;font-size:11px;color:#88cc88;margin-bottom:8px;">Gizli adayın: <strong>${a.coalition||'—'}</strong></p>`;
+    html+=`<button class="pow-do" onclick="skipPow('${pn}')">TAMAM</button>`;
+  } else if(pw.id==='dokunulmazlik'){
+    html+=`<p style="font-family:'Special Elite',cursive;font-size:11px;color:var(--mu);margin-bottom:8px;">Bu turda Skandal, Kukla ve Veto'ya karşı korunuyorsun.</p>`;
+    html+=`<button class="pow-do" onclick="usePow('${pn}','dokunulmazlik')">AKTİFLEŞTİR</button>`;
+    html+=`<button class="pow-skip" onclick="skipPow('${pn}')">Bu tur kullanmıyorum</button>`;
+  } else {
+    html+=`<p style="font-family:'Special Elite',cursive;font-size:11px;color:var(--dm);">Uygun hedef yok.</p>`;
+    html+=`<button class="pow-do" onclick="skipPow('${pn}')">GEÇMEK ZORUNDA KALDIM</button>`;
+  }
+  html+='</div>';
+  wrap.innerHTML=html;
+}
+
+function usePow(pn,powId){
+  const a=G.asgn[pn];
+  if(powId==='kukla'){
+    const tgt=document.getElementById('ksel').value;
+    const msg=document.getElementById('kmsg').value.trim();
+    if(!tgt||!msg){alert('Hedef ve mesaj girilmeli!');return;}
+    // Check dokunulmazlik
+    if(isDokunulmazlik(tgt)){alert(`${tgt} dokunulmazlık korumasında!`);return;}
+    // Check if target already had their card turn this round
+    const targetIdx=G.cardPhaseVoters.indexOf(tgt);
+    if(targetIdx<G.cardIdx){
+      // Target already went — apply NEXT round
+      G.kuklaNextRound={from:pn,to:tgt,msg};
+    } else {
+      // Target hasn't gone yet — apply THIS round
+      G.kuklaThisRound={from:pn,to:tgt,msg};
+      // Update the back content flag if needed
+    }
+    a.powUsed=true;
+  } else if(powId==='medya'){
+    const tgt=document.getElementById('msel').value;
+    if(!tgt){alert('Hedef seçilmeli!');return;}
+    G.mediaTgt=tgt;
+    a.powUsed=true;
+  } else if(powId==='veto'){
+    const tgt=document.getElementById('vsel').value;
+    if(!tgt){alert('Hedef seçilmeli!');return;}
+    if(isDokunulmazlik(tgt)){alert(`${tgt} dokunulmazlık korumasında!`);return;}
+    G.vetoTgt=tgt;
+    a.powUsed=true;
+  } else if(powId==='dokunulmazlik'){
+    a.powUsed=true;
+  }
+  skipPow(pn);
+}
+
+function isDokunulmazlik(pn){
+  const a=G.asgn[pn];
+  return a&&a.pow&&a.pow.id==='dokunulmazlik'&&!a.powUsed;
+}
+
+function skipPow(pn){
+  document.getElementById('pow-wrap').style.display='none';
+  showNextBtn();
+}
+
+function nextCard(){
+  // Instantly hide card before moving to next player
+  const rfwrap=document.getElementById('rfwrap');
+  rfwrap.style.transition='none';
+  rfwrap.style.opacity='0';
+  rfwrap.style.pointerEvents='none';
+  G.cardIdx++;
+  showCardScreen();
+}
+
+// ═══════════════════════════════════════════════════════
+// TRANSITION → GAME
+// ═══════════════════════════════════════════════════════
+function showTransition(){
+  document.getElementById('tr-n').textContent=G.round;
+  SS('s-trans');
+}
+function showGame(){
+  if(!G.gundem)G.gundem=drawG();
+  renderGame();
+  SS('s-game');
+}
+
+// ═══════════════════════════════════════════════════════
+// GAME SCREEN
+// ═══════════════════════════════════════════════════════
+function drawG(){
+  const pool=ALL_G.filter(g=>G.activeG.has(g.id)&&!G.usedG.includes(g.id));
+  const fallback=ALL_G.filter(g=>G.activeG.has(g.id));
+  if(pool.length===0)G.usedG=[];
+  const item=rnd(pool.length>0?pool:fallback);
+  if(item)G.usedG.push(item.id);
+  return item||ALL_G[0];
+}
+
+function flipCard(id){document.getElementById(id).classList.toggle('fp');}
+
+function renderGame(){
+  document.getElementById('gbdg').textContent=`TUR ${G.round}`;
+  let html='<div style="margin-bottom:14px;"><div class="sl">Adaylar</div><div class="ag">';
+  G.players.forEach(p=>{
+    const inAlive=G.alive.includes(p);
+    const inFolk=G.folk.includes(p);
+    const cls=inAlive?'':inFolk?'folk':'out';
+    html+=`<div class="ac ${cls}"><div class="adot"></div><span class="aname">${p}${inFolk?' (H)':''}</span></div>`;
+  });
+  html+='</div></div>';
+
+  // Gundem card
+  const g=G.gundem;
+  const gl=g.type==='suclama'?'SUÇLAMA GÜNDEMİ':g.type==='erken'?'⚡ ERKEN SEÇİM':'GÜNDEM';
+  const gc=g.type==='suclama'?'var(--red)':'var(--gold)';
+  html+=`<div class="fw" id="fg" onclick="flipCard('fg')">
+    <div class="fi">
+      <div class="ff"><div class="gff"><div><div class="gfl">GÜNDEM KARTI</div><div class="gfh">Açmak için dokun</div></div><div class="gfi">📋</div></div></div>
+      <div class="fb"><div class="gc" style="border-left-color:${gc}"><div class="gt" style="color:${gc};">${gl}</div><div class="gtx">${g.text}</div></div></div>
+    </div>
+  </div>`;
+
+  // Skandal card(s)
+  if(G.alive.length>0){
+    const skPool=G.skPool.length>0?G.skPool:ALL_S;
+    // Normal skandal target
+    const normalTgt=G.alive[G.skIdx%G.alive.length];
+    const sk1=skPool[G.skIdx%skPool.length];
+    html+=buildSkCard('fsk1','fsk1',normalTgt,sk1);
+    // If medya used, second skandal card for that target
+    if(G.mediaTgt&&G.mediaTgt!==normalTgt){
+      const sk2=skPool[(G.skIdx+1)%skPool.length];
+      html+=buildSkCard('fsk2','fsk2',G.mediaTgt,sk2);
+    } else if(G.mediaTgt&&G.mediaTgt===normalTgt){
+      // Same target — just show one
+    }
+  }
+
+  document.getElementById('gcnt').innerHTML=html;
+}
+
+function buildSkCard(wrapId,innerId,target,skObj){
+  return `<div class="fw" id="${wrapId}" onclick="flipCard('${wrapId}')">
+    <div class="fi">
+      <div class="ff"><div class="sff"><div><div class="sfl">SKANDAL KARTI</div><div class="sfh">Açmak için dokun</div></div><div class="sfi">📰</div></div></div>
+      <div class="fb"><div class="skc"><div class="skt">SKANDAL KARTI</div><div class="skg">${target.toUpperCase()}</div><div class="skx">${skObj.text}</div></div></div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════════════════════
+function startDisc(){
+  document.getElementById('dtop').textContent=G.gundem.text;
+  G.tSec=300;G.tTotal=300;G.tRunning=true;
+  updT();SS('s-disc');
+  if(G.tInt)clearInterval(G.tInt);
+  G.tInt=setInterval(()=>{
+    if(!G.tRunning)return;
+    G.tSec--;updT();
+    if(G.tSec<=0){clearInterval(G.tInt);G.tInt=null;startVote();}
+  },1000);
+}
+function updT(){
+  const s=G.tSec,m=Math.floor(s/60),sc=s%60;
+  document.getElementById('tnd').textContent=`${m}:${pad(sc)}`;
+  document.getElementById('trf').style.strokeDashoffset=565*(1-s/G.tTotal);
+  const urg=s<=30;
+  document.getElementById('tnd').classList.toggle('urg',urg);
+  document.getElementById('trf').classList.toggle('urg',urg);
+  document.getElementById('tsb').textContent=urg?'saniye kaldı':'kaldı';
+  document.getElementById('pbtn').textContent=G.tRunning?'DURAKLAT':'DEVAM';
+}
+function toggleP(){G.tRunning=!G.tRunning;document.getElementById('pbtn').textContent=G.tRunning?'DURAKLAT':'DEVAM';}
+function addT(n){G.tSec+=n;G.tTotal+=n;updT();}
+
+// ═══════════════════════════════════════════════════════
+// VOTING
+// ═══════════════════════════════════════════════════════
+function startVote(){
+  if(G.tInt){clearInterval(G.tInt);G.tInt=null;}
+  G.allVoters=[...G.alive,...G.folk];
+  G.voteIdx=0;
+  G.votes={};
+  G.alive.forEach(p=>{G.votes[p]=0;});
+  G.selVote=null;
+  showVoteScreen();
+}
+
+function showVoteScreen(){
+  if(G.voteIdx>=G.allVoters.length){showResults();return;}
+  const voter=G.allVoters[G.voteIdx];
+  const isFolk=G.folk.includes(voter);
+  document.getElementById('vpr').textContent=`OYLAMA — ${G.voteIdx+1} / ${G.allVoters.length}`;
+  document.getElementById('vn').textContent=voter.toUpperCase()+(isFolk?' (HALK)':'');
+  document.getElementById('vi').textContent=isFolk?'Halk olarak oy kullanıyorsun':'Telefonu al — gizlice oyunu kullan';
+  const vc=document.getElementById('vc');
+  vc.classList.remove('op');vc.style.cursor='pointer';vc.onclick=revealV;
+  document.getElementById('vbk').style.display='block';
+  document.getElementById('vfr').style.display='none';
+  document.getElementById('vcnf').style.display='none';
+  G.selVote=null;
+  // Build options — folk can also vote for alive candidates
+  const candidates=G.alive.filter(p=>p!==voter);
+  const opts=document.getElementById('vos');opts.innerHTML='';
+  if(candidates.length===0){
+    opts.innerHTML=`<p style="font-family:'Special Elite',cursive;font-size:12px;color:var(--mu);text-align:center;">Oy verilecek aday yok.</p>`;
+    document.getElementById('vcnf').style.display='none';
+    // Auto-advance
+    setTimeout(()=>{G.voteIdx++;if(G.voteIdx>=G.allVoters.length)showResults();else showVoteScreen();},1500);
+    return;
+  }
+  candidates.forEach(c=>{
+    const btn=document.createElement('button');
+    btn.className='vo';
+    btn.innerHTML=`<span>${c.toUpperCase()}</span><span class="var">→</span>`;
+    btn.onclick=()=>pickV(c,btn);
+    opts.appendChild(btn);
+  });
+  SS('s-vote');
+}
+
+function revealV(){
+  const vc=document.getElementById('vc');
+  if(vc.classList.contains('op'))return;
+  vc.classList.add('op');vc.style.cursor='default';vc.onclick=null;
+  document.getElementById('vbk').style.display='none';
+  document.getElementById('vfr').style.display='block';
+}
+function pickV(c,btn){
+  document.querySelectorAll('.vo').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');G.selVote=c;
+  document.getElementById('vcnf').style.display='block';
+}
+function confirmV(){
+  if(!G.selVote)return;
+  const voter=G.allVoters[G.voteIdx];
+  // Check veto
+  if(G.vetoTgt&&G.vetoTgt===voter){
+    // Vote nullified — don't record
+  } else {
+    if(G.votes.hasOwnProperty(G.selVote)){
+      G.votes[G.selVote]++;
+    }
+  }
+  G.voteIdx++;
+  if(G.voteIdx>=G.allVoters.length)showResults();
+  else showVoteScreen();
+}
+
+// ═══════════════════════════════════════════════════════
+// RESULTS
+// ═══════════════════════════════════════════════════════
+function showResults(){
+  const entries=Object.entries(G.votes);
+  if(!entries.length){afterElim();return;}
+  // Plurality elimination: highest vote count eliminated.
+  // If multiple candidates share the highest count → no elimination.
+  const maxV=Math.max(...entries.map(e=>e[1]));
+  const maxCandidates=entries.filter(([,v])=>v===maxV);
+  const isTie=maxCandidates.length>1;
+  G.isTie=isTie;
+  document.getElementById('tie-box').style.display='none';
+  if(isTie){
+    document.getElementById('rlbl').textContent='Berabere';
+    document.getElementById('relim').textContent='—';
+    document.getElementById('rsb').textContent='';
+    document.getElementById('tie-box').style.display='block';
+    document.getElementById('tie-box').textContent='En yüksek oy eşit — kimse elenmedi. Yeni tur başlıyor.';
+    G.pendingElim=null;
+  } else {
+    const eliminated=maxCandidates[0][0];
+    document.getElementById('rlbl').textContent='Elendi';
+    document.getElementById('relim').textContent=eliminated.toUpperCase();
+    document.getElementById('rsb').textContent=`${maxV} oy aldı`;
+    G.pendingElim=eliminated;
+  }
+  const dispMax=Math.max(maxV,1);
+  let html='<div class="sl" style="margin-bottom:10px;">Oy Dağılımı</div>';
+  [...entries].sort((a,b)=>b[1]-a[1]).forEach(([name,votes])=>{
+    const isEl=!isTie&&name===G.pendingElim;
+    const pct=(votes/dispMax)*100;
+    html+=`<div class="trow ${isEl?'elim':''}"><span class="trn">${name}</span><div class="tbw"><div class="tbar" style="width:${pct}%"></div></div><span class="trc">${votes}</span></div>`;
+  });
+  document.getElementById('vtally').innerHTML=html;
+  SS('s-res');
+}
+
+// ═══════════════════════════════════════════════════════
+// AFTER ELIMINATION
+// ═══════════════════════════════════════════════════════
+function afterElim(){
+  if(G.pendingElim){
+    G.alive=G.alive.filter(p=>p!==G.pendingElim);
+    G.folk.push(G.pendingElim);
+  }
+  // Check end conditions
+  if(G.alive.length<=1){showFinal();return;}
+  if(G.gundem&&G.gundem.type==='erken'){showFinal();return;}
+  // New round
+  G.round++;
+  G.gundem=drawG();
+  G.skIdx++;
+  beginCardPhase();
+}
+
+// ═══════════════════════════════════════════════════════
+// FINAL
+// ═══════════════════════════════════════════════════════
+function showFinal(){
+  const f=G.alive;
+  if(f.length===1){
+    document.getElementById('flbl').textContent='Cumhurbaşkanı Seçildi';
+    document.getElementById('fwin').textContent=f[0].toUpperCase();
+    document.getElementById('fwin').style.fontSize='clamp(48px,16vw,72px)';
+    document.getElementById('fsub').textContent='Tebrikler!';
+  } else {
+    document.getElementById('flbl').textContent=f.length===0?'Oyun Bitti':'Final';
+    document.getElementById('fwin').textContent=f.length===0?'—':f.map(x=>x.toUpperCase()).join(' vs ');
+    document.getElementById('fwin').style.fontSize='clamp(28px,8vw,48px)';
+    document.getElementById('fsub').textContent=f.length===0?'Kimse kazanamadı.':'Herkes son kez oyluyor!';
+  }
+  let rhtml='<div class="sl" style="margin-bottom:14px;">Tüm Roller Açıklanıyor</div>';
+  G.players.forEach(p=>{
+    const a=G.asgn[p];const alive=f.includes(p);const folk=G.folk.includes(p);
+    let tags='';
+    if(a.ideo)tags+=`<span class="rt id">${a.ideo.icon} ${a.ideo.name}</span>`;
+    if(a.pow)tags+=`<span class="rt pw">${a.pow.name}</span>`;
+    if(a.coalition)tags+=`<span class="rt co">→${a.coalition}</span>`;
+    const status=alive?' 🏛':folk?' 🗳':' ✕';
+    rhtml+=`<div class="ri" style="${alive?'':'opacity:.55'}"><span class="rn">${p}${status}</span><div class="rc">${tags||'<span style="font-size:10px;color:var(--dm);">serbest</span>'}</div></div>`;
+  });
+  document.getElementById('frv').innerHTML=rhtml;
+  SS('s-final');
+}
+
+// ═══════════════════════════════════════════════════════
+// NEW GAME (keep players)
+// ═══════════════════════════════════════════════════════
+function newGame(){
+  const saved=[...G.players];
+  G={
+    players:saved,
+    activePow:new Set(POWERS.map(p=>p.id)),
+    activeIdeo:new Set(IDEO.map(i=>i.id)),
+    activeG:new Set(ALL_G.map(g=>g.id)),
+    activeS:new Set(ALL_S.map(s=>s.id)),
+    asgn:{},alive:[],folk:[],round:1,usedG:[],skPool:[],skIdx:0,gundem:null,
+    mediaTgt:null,vetoTgt:null,kuklaNextRound:null,kuklaThisRound:null,
+    cardIdx:0,cardPhaseVoters:[],kuklaReturnIdx:null,
+    allVoters:[],voteIdx:0,votes:{},selVote:null,pendingElim:null,isTie:false,
+    tSec:300,tTotal:300,tRunning:false,tInt:null,
+  };
+  renderP();
+  SS('s-players');
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+G.players=loadP();
+while(G.players.length<4)G.players.push('');
+renderP();
+</script>
+</body>
+</html>
